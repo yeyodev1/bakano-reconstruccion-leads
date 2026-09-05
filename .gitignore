@@ -32,3 +32,6 @@ coverage
 
 # Node compile cache (generado por el runtime, no versionar)
 node-compile-cache/
+.vercel
+.env*
+!.env.example
