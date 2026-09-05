@@ -12,3 +12,46 @@ body {
 *, *::before, *::after {
   box-sizing: inherit; // Herencia controlada
 }
+
+// ── Tema oscuro por vista ─────────────────────────────────────────────────────
+// La landing de reconstrucción monta esta clase en <html> al entrar y la quita al salir,
+// para no oscurecer las páginas legales, que son claras.
+html.theme-dark {
+  color-scheme: dark; // scrollbars y controles nativos en oscuro (Chrome, Safari, Firefox, Edge)
+  background-color: $BAKANO-DARK; // evita el flash blanco al hacer overscroll
+
+  body {
+    background-color: $BAKANO-DARK;
+  }
+}
+
+// Scrollbars oscuras en cualquier contenedor bajo tema oscuro.
+html.theme-dark,
+html.theme-dark * {
+  scrollbar-width: thin; // Firefox
+  scrollbar-color: rgba($BAKANO-LIGHT, 0.28) transparent;
+}
+
+html.theme-dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html.theme-dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.theme-dark ::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+  background-color: rgba($BAKANO-LIGHT, 0.24);
+
+  &:hover {
+    background-color: rgba($BAKANO-LIGHT, 0.4);
+  }
+}
+
+html.theme-dark ::-webkit-scrollbar-corner {
+  background: transparent;
+}
