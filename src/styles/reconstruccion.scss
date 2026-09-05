@@ -1,0 +1,81 @@
+// Tokens compartidos de la landing de reconstrucción.
+// El `additionalData` de vite.config.ts solo alcanza a la hoja de entrada de cada componente,
+// no a los archivos que ella carga con @use — por eso aquí importamos las variables a mano.
+@use '@/styles/colorVariables.module.scss' as *;
+
+@mixin seccion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.5rem 1.5rem;
+
+  @media (min-width: 768px) {
+    padding: 5rem 2rem;
+  }
+}
+
+@mixin titulo {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  text-align: center;
+}
+
+@mixin subtitulo {
+  max-width: 46ch;
+  margin: 0.7rem 0 0;
+  color: rgba($BAKANO-LIGHT, 0.62);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+@mixin cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.05rem 1.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: $BAKANO-PINK;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba($BAKANO-PINK, 0.42);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+@mixin campo {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(#fff, 0.16);
+  border-radius: 11px;
+  background: rgba(#fff, 0.05);
+  color: $BAKANO-LIGHT;
+  font-family: inherit;
+  font-size: 1rem;
+
+  &:focus {
+    border-color: $BAKANO-PINK;
+    outline: none;
+  }
+
+  &::placeholder {
+    color: rgba($BAKANO-LIGHT, 0.32);
+  }
+}
