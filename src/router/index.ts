@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteMeta } from 'vue-router'
 import CalificarView from '../views/CalificarView.vue'
 import FunnelView from '../views/FunnelView.vue'
+import ReconstruccionView from '../views/ReconstruccionView.vue'
 import VideoView from '../views/VideoView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import LegalNoticeView from '../views/LegalNoticeView.vue'
@@ -29,17 +30,31 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      alias: '/registro-vsl-tr',
+      name: 'reconstruccion',
+      component: ReconstruccionView,
+      meta: {
+        title: 'Nos robaron | Bakano \u2014 P\u00e1gina web Pro $400 \u00b7 30 cupos',
+        description:
+          'Entraron a nuestra oficina y se llevaron los equipos. Para reconstruir abrimos 30 cupos: P\u00e1gina Web Pro $400 y Tienda Online $500, trabajos con calidad de $2,000+.',
+        canonical: 'https://bakano.ec/',
+        ogTitle: 'Nos robaron. Y en vez de cerrar, te hacemos tu p\u00e1gina web.',
+        ogDescription:
+          '30 cupos de reconstrucci\u00f3n: P\u00e1gina Web Pro $400 \u00b7 Tienda Online Completa $500. Calidad de $2,000+.',
+        ogUrl: 'https://bakano.ec/',
+      } satisfies RouteMeta,
+    },
+    {
+      path: '/registro-vsl-tr',
       name: 'funnel',
       component: FunnelView,
       meta: {
-        title: 'Bakano | Crecimiento para negocios que facturan más de $20k',
+        title: 'Bakano | Crecimiento para negocios que facturan m\u00e1s de $20k',
         description:
-          'Ayudamos a dueños y socios de negocios que facturan más de $20,000 al mes a crecer entre un 10% y 20% con la metodología Data Growth Business.',
+          'Ayudamos a due\u00f1os y socios de negocios que facturan m\u00e1s de $20,000 al mes a crecer entre un 10% y 20% con la metodolog\u00eda Data Growth Business.',
         canonical: 'https://mkt.bakano.ec/registro-vsl-tr',
-        ogTitle: 'Bakano | Aumenta tu facturación entre 10% y 20%',
+        ogTitle: 'Bakano | Aumenta tu facturaci\u00f3n entre 10% y 20%',
         ogDescription:
-          'Metodología Data Growth Business para dueños y socios de negocios que facturan más de $20,000 al mes.',
+          'Metodolog\u00eda Data Growth Business para due\u00f1os y socios de negocios que facturan m\u00e1s de $20,000 al mes.',
         ogUrl: 'https://mkt.bakano.ec/registro-vsl-tr',
       } satisfies RouteMeta,
     },
