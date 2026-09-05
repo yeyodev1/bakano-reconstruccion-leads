@@ -33,13 +33,13 @@ const router = createRouter({
       name: 'reconstruccion',
       component: ReconstruccionView,
       meta: {
-        title: 'Nos robaron | Bakano \u2014 P\u00e1gina web Pro $400 \u00b7 30 cupos',
+        title: 'Nos robaron | Bakano \u2014 Web $400 \u00b7 Tienda con PayPhone $500',
         description:
-          'Entraron a nuestra oficina y se llevaron los equipos. Para reconstruir abrimos 30 cupos: P\u00e1gina Web Pro $400 y Tienda Online $500, trabajos con calidad de $2,000+.',
+          'Entraron a nuestra oficina y se llevaron los equipos. Para reconstruir abrimos 30 cupos: trabajos que valen de $2,000 a $4,000 a $400 la web y $500 la tienda con pasarela PayPhone.',
         canonical: 'https://bakano.ec/',
         ogTitle: 'Nos robaron. Y en vez de cerrar, te hacemos tu p\u00e1gina web.',
         ogDescription:
-          '30 cupos de reconstrucci\u00f3n: P\u00e1gina Web Pro $400 \u00b7 Tienda Online Completa $500. Calidad de $2,000+.',
+          '30 cupos: web $400 y tienda con PayPhone $500. Trabajos que normalmente valen entre $2,000 y $4,000.',
         ogUrl: 'https://bakano.ec/',
       } satisfies RouteMeta,
     },
