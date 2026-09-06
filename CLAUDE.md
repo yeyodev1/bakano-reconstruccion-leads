@@ -65,8 +65,10 @@ secreto importado desde `src/` queda a la vista. El token de CAPI y la URL del w
 variables de entorno del servidor (`.env` local, Secrets en Vercel) y **nunca** llegan al
 navegador — verificado: 0 apariciones en el JS de producción.
 
-`api/lead.ts` también decide las **etiquetas** del contacto según `interes`. Ojo: hoy las envía
-pero el workflow de GHL todavía no las aplica (ver `docs/configuracion-ghl.md`).
+`api/lead.ts` también calcula las **etiquetas** según `interes` y las manda en `tags`, pero GHL
+**no lee ese campo**: el workflow etiqueta por rama con valores fijos que coinciden con los del
+servidor. Si cambias una etiqueta aquí, cámbiala también en el workflow (ver
+`docs/configuracion-ghl.md`).
 
 Variables requeridas — plantilla en `.env.example`:
 `GHL_WEBHOOK_URL`, `META_PIXEL_ID`, `META_CAPI_TOKEN`, `META_CAPI_TEST_CODE` (opcional).
