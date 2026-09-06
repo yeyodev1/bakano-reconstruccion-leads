@@ -8,17 +8,28 @@ import { etiquetaPlan, valorPlan } from '@/data/reconstruccion'
 const props = defineProps<{ plan?: string }>()
 const emit = defineEmits<{ (e: 'enviado', nombre: string, interes: string): void }>()
 
-const form = ref({ nombre: '', apellido: '', telefono: '', negocio: '', interes: props.plan ?? '' })
+const form = ref({
+  nombre: '',
+  apellido: '',
+  telefono: '',
+  email: '',
+  negocio: '',
+  interes: props.plan ?? '',
+})
 const enviando = ref(false)
 const error = ref('')
 
 const soloChisme = computed(() => form.value.interes === 'ayudar')
+
+// Suficiente para atajar typos evidentes; la validación real la hace GHL al deduplicar.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 const valido = computed(
   () =>
     form.value.nombre.trim().length > 1 &&
     form.value.apellido.trim().length > 1 &&
     form.value.telefono !== '' &&
+    EMAIL_RE.test(form.value.email.trim()) &&
     form.value.interes !== '',
 )
 
@@ -47,6 +58,7 @@ async function enviar() {
       nombre: form.value.nombre.trim(),
       apellido: form.value.apellido.trim(),
       telefono: form.value.telefono,
+      email: form.value.email.trim().toLowerCase(),
       negocio: form.value.negocio.trim(),
       interes: plan,
       plan_nombre: etiquetaPlan(plan),
@@ -82,6 +94,19 @@ async function enviar() {
     </div>
 
     <PhoneField v-model="form.telefono" />
+
+    <label class="cf__campo">
+      Tu correo
+      <input
+        v-model="form.email"
+        type="email"
+        inputmode="email"
+        autocomplete="email"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="maria@tunegocio.com"
+      />
+    </label>
 
     <label class="cf__campo">
       Tu negocio <span>(opcional)</span>

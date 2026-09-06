@@ -33,6 +33,7 @@ https://services.leadconnectorhq.com/hooks/pEFChujwCCaMWBNbZYD1/webhook-trigger/
       SÍ ↓
 3. Crear/actualizar contacto         dedup por teléfono (E.164)
       Phone          ← telefono
+      Email          ← email          (pendiente de mapear, ver Pendientes)
       First name     ← nombre
       Last name      ← apellido
       Business Name  ← negocio
@@ -81,6 +82,9 @@ Notas de diseño:
 
 ## Pendientes
 
+0. **Mapear `email` → Email en "Crear contacto".** El formulario ya lo pide (obligatorio) y el
+   servidor lo manda en minúsculas; también va hasheado a CAPI como `em`. Hasta que se mapee,
+   solo queda en la nota.
 1. **Rama `tienda` sin `lead-caliente`.** La extensión la dejó incompleta: hoy pone
    `landing-reconstruccion, interes-tienda-500` y falta la tercera etiqueta. Una tienda de $500
    es tan caliente como una web de $400.
@@ -100,6 +104,7 @@ Notas de diseño:
   "event_id": "lead_…",
   "nombre": "María", "apellido": "Pérez",
   "telefono": "+593984934039",
+  "email": "maria@tunegocio.com",
   "negocio": "Panadería La Espiga",
   "interes": "tienda",
   "plan_nombre": "Tienda Online + PayPhone",

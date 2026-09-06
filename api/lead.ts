@@ -61,6 +61,7 @@ function nota(d: Record<string, string>, tags: string[], event_id: string): stri
     `🧾 Lead landing-reconstruccion`,
     `🎯 Interés: ${INTERES[d.interes] ?? o(d.interes)}`,
     `📦 Plan: ${o(d.plan_nombre)} | 💵 USD ${o(d.valor)}`,
+    `✉️ Email: ${o(d.email)}`,
     `🏪 Negocio: ${o(d.negocio)}`,
     `📍 Origen: ${o(d.origen)}`,
     `🔗 URL: ${o(d.origen_url)}`,
@@ -99,6 +100,7 @@ async function enviarACapi(
     client_user_agent: ua,
   }
   if (body.telefono) user_data.ph = [hashPhone(body.telefono)]
+  if (body.email) user_data.em = [hash(body.email)]
   if (body.nombre) user_data.fn = [hash(body.nombre)]
   if (body.apellido) user_data.ln = [hash(body.apellido)]
   // fbc y fbp van en claro: Meta los quiere sin hashear.
@@ -148,7 +150,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const datos: Record<string, string> = {}
   for (const k of [
-    'nombre', 'apellido', 'telefono', 'negocio', 'interes', 'plan_nombre',
+    'nombre', 'apellido', 'telefono', 'email', 'negocio', 'interes', 'plan_nombre',
     'valor', 'origen', 'origen_url', 'fbclid', 'fbc', 'fbp',
     'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_id',
   ]) {
