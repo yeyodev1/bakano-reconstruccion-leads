@@ -107,6 +107,8 @@ El **access token de CAPI es secreto de servidor**: nunca en el bundle de Vite n
 
 - **Sin punto y coma**, comillas simples, ancho 100 (Prettier).
 - **Sin emojis en el código ni la UI** — íconos FontAwesome 6 vía CDN: `<i class="fa-solid fa-...">`.
+  Única excepción: la nota `notas` que `api/lead.ts` manda a GHL, que es texto plano y los usa
+  a propósito para dar jerarquía.
 - **Flex, no grid.** Mobile-first: escribe el estilo base para móvil y usa `@media (min-width: 768px)` para subir. Verifica que no haya scroll horizontal.
 - Las variables SCSS de marca (`$BAKANO-PINK`, `$BAKANO-DARK`, `$BAKANO-LIGHT`, `$BAKANO-PURPLE`, `$BAKANO-GREEN`) se **auto-inyectan** en todo bloque `<style lang="scss">` vía `additionalData` en `vite.config.ts`. No pongas `@use` en los componentes.
 - Alias `@` → `./src`, funciona en imports TS y en rutas SCSS.

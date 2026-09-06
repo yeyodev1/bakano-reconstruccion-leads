@@ -38,6 +38,39 @@ function etiquetas(interes: string): string[] {
   return [...base, 'solo-informacion', 'nurture']
 }
 
+/** Nombre legible del interés, con el mismo ícono que usa la landing. */
+const INTERES: Record<string, string> = {
+  web: '🌐 Página Web Pro',
+  tienda: '🛒 Tienda Online + PayPhone',
+  ayudar: '❤️ Solo quiere ayudar / saber el chisme',
+}
+
+/** Valor a mostrar en la nota: un guion largo en vez de un hueco cuando viene vacío. */
+const o = (v: string) => v || '—'
+
+/**
+ * Nota lista para pegar en el contacto de GHL. Va en la clave `notas` del webhook para que
+ * la acción "Añadir nota" del workflow use una sola variable en vez de armarla campo a campo.
+ * Los emojis son deliberados: son la única forma de dar jerarquía en una nota de texto plano.
+ */
+function nota(d: Record<string, string>, tags: string[], event_id: string): string {
+  const utm = ['source', 'medium', 'campaign', 'content', 'term', 'id']
+    .map((k) => `${k}=${o(d[`utm_${k}`])}`)
+    .join(' | ')
+  return [
+    `🧾 Lead landing-reconstruccion`,
+    `🎯 Interés: ${INTERES[d.interes] ?? o(d.interes)}`,
+    `📦 Plan: ${o(d.plan_nombre)} | 💵 USD ${o(d.valor)}`,
+    `🏪 Negocio: ${o(d.negocio)}`,
+    `📍 Origen: ${o(d.origen)}`,
+    `🔗 URL: ${o(d.origen_url)}`,
+    `🆔 Event ID: ${event_id}`,
+    `📊 Meta: fbclid=${o(d.fbclid)} | fbc=${o(d.fbc)} | fbp=${o(d.fbp)}`,
+    `📣 UTM: ${utm}`,
+    `🏷️ Tags servidor: ${tags.join(', ')}`,
+  ].join('\n')
+}
+
 async function enviarAGhl(payload: Record<string, unknown>): Promise<boolean> {
   if (!GHL_WEBHOOK) return false
   try {
@@ -143,6 +176,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ...datos,
       tags: tags.join(','), // GHL mapea mejor una cadena separada por comas
       full_name: `${datos.nombre} ${datos.apellido}`.trim(),
+      notas: nota(datos, tags, event_id),
     }),
     enviarACapi(datos, datos.interes === 'ayudar' ? 'Contact' : 'Lead', event_id, ip, ua),
   ])

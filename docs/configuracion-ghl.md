@@ -39,8 +39,9 @@ https://services.leadconnectorhq.com/hooks/pEFChujwCCaMWBNbZYD1/webhook-trigger/
       Contact source = "landing-reconstruccion"   (fijo, no lee `origen`)
 4. Añadir nota al contacto
       Título: "Lead landing-reconstruccion: {plan_nombre} (USD {valor})"
-      Cuerpo: interes, plan, valor, negocio, origen, origen_url, event_id,
-              fbclid/fbc/fbp, utm_*, tags
+      Cuerpo: {{Inbound Webhook Trigger.Notas}}  ← la arma el servidor, ver `notas` abajo
+              (antes se componía campo por campo: interes, plan, valor, negocio, origen,
+              origen_url, event_id, fbclid/fbc/fbp, utm_*, tags)
 5. If/Else "¿Qué le interesa?"       sobre interes
       "web"    → Add Tag [landing-reconstruccion, interes-web-400, lead-caliente]
                  → Oportunidad en pipeline "Leads (Prospeccion)", etapa "Nuevo contacto",
@@ -106,9 +107,15 @@ Notas de diseño:
   "origen": "landing-reconstruccion",
   "tags": "landing-reconstruccion,interes-tienda-500,lead-caliente",
   "full_name": "María Pérez",
+  "notas": "🧾 Lead landing-reconstruccion\n🎯 Interés: 🛒 Tienda Online + PayPhone\n📦 Plan: … | 💵 USD 500\n🏪 Negocio: …\n📍 Origen: …\n🔗 URL: …\n🆔 Event ID: …\n📊 Meta: fbclid=… | fbc=… | fbp=—\n📣 UTM: source=… | medium=… | …\n🏷️ Tags servidor: …",
   "fbclid": "", "fbc": "", "fbp": "", "utm_source": "", "…": ""
 }
 ```
+
+**`notas`** es la nota completa ya armada por el servidor (`nota()` en `api/lead.ts`), con saltos
+de línea y emojis para dar jerarquía. La acción *Añadir nota* del workflow puede usar solo
+`{{Inbound Webhook Trigger.Notas}}` en vez de componerla campo por campo. Los vacíos van como `—`.
+Solo viaja en los leads, no en las vistas.
 
 Las visitas mandan `etapa: "reconstruccion_view"` sin datos personales. El workflow las corta en
 el primer If/Else: entran al trigger (y cobran) pero no crean contacto.
