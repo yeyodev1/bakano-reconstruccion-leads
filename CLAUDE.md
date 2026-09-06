@@ -18,18 +18,23 @@ No hay test runner, ESLint ni CI en este repo. `pnpm type-check` es la única co
 
 Landing de captación de leads de **Bakano** (agencia de performance marketing, Guayaquil).
 
-**Contexto vigente:** a Bakano le robaron los equipos de la oficina (nov 2026). La landing raíz (`/`) es la campaña de reconstrucción: vende páginas web a precio rebajado y capta leads. **No hay VSL en el flujo principal** — el funnel VSL viejo sigue en el repo pero movido a `/registro-vsl-tr`.
+**Contexto vigente:** a Bakano le robaron los equipos de la oficina (sep 2026). La landing raíz (`/`) es la campaña de reconstrucción: vende páginas web a precio rebajado y capta leads. **No hay VSL en el flujo principal** — el funnel VSL viejo sigue en el repo pero movido a `/registro-vsl-tr`.
 
 Los datos de la campaña vienen de los reels de @bakano.ec y no deben inventarse ni inflarse:
 
 | Dato | Valor |
 |---|---|
 | Cupos | 30, solo este mes |
-| Página Web Pro | $400 — SEO + optimizada para IA (ChatGPT, Gemini, Google) |
-| Tienda Online Completa | $500 — incluye pasarela de pagos |
-| Valor de referencia | "trabajos con calidad de $2,000+" |
+| Página Web Pro | $400 — SEO para Google + **GEO** (ChatGPT, Gemini y otros LLM) |
+| Tienda Online Completa | $500 — pasarela **PayPhone** integrada |
+| Precio normal | "$2,000 a $4,000" |
 
-No nombres ni insinúes quién cometió el robo. La copy se queda en lo que Bakano publicó: les robaron, están reconstruyendo, piden trabajo y no donaciones.
+La transcripción real de los tres reels está en `docs/transcripciones-reels.md`; el porqué de cada
+decisión de copy, en `docs/CONTEXTO.md`. **Léelos antes de tocar el mensaje.**
+
+No nombres ni insinúes quién cometió el robo, y no traslades a la landing el detalle morboso del
+reel 2 (trabajadoras sexuales, escopolamina): identifica a un excolaborador real y es exposición
+legal. La copy se queda en la traición, no en el shock.
 
 ## Arquitectura
 
@@ -45,9 +50,40 @@ El SEO **no** se define en los componentes: vive en el `meta` de cada ruta y el 
 
 Archivos obsoletos, no usar: `HomeView.vue`, `ThankYouView.vue`, `ToolsView.vue`.
 
+### El backend (`api/lead.ts`)
+
+Hay **una** función serverless. Vercel convierte cualquier archivo de `/api` en un endpoint HTTP;
+no hay servidor que levantar ni deploy aparte.
+
+```
+Navegador → POST /api/lead ─┬→ Webhook GHL → workflow → contacto
+                            └→ Meta Conversions API (dedup por event_id)
+```
+
+Existe por una razón concreta: **el bundle de Vite es público y el repo también**. Cualquier
+secreto importado desde `src/` queda a la vista. El token de CAPI y la URL del webhook viven en
+variables de entorno del servidor (`.env` local, Secrets en Vercel) y **nunca** llegan al
+navegador — verificado: 0 apariciones en el JS de producción.
+
+`api/lead.ts` también decide las **etiquetas** del contacto según `interes`. Ojo: hoy las envía
+pero el workflow de GHL todavía no las aplica (ver `docs/configuracion-ghl.md`).
+
+Variables requeridas — plantilla en `.env.example`:
+`GHL_WEBHOOK_URL`, `META_PIXEL_ID`, `META_CAPI_TOKEN`, `META_CAPI_TEST_CODE` (opcional).
+
+`api/**/*.ts` se type-checkea vía `tsconfig.node.json`.
+
+### Despliegue
+
+Vercel, proyecto `bakano-reconstruccion-leads`, conectado a GitHub: **cada push a `main`
+redespliega**. `vercel.json` tiene el rewrite de SPA — sin él, entrar directo a una ruta interna
+da 404.
+
 ### Cómo salen los leads
 
-Un solo camino, y es fire-and-forget: `trackStage(etapa, data)` en `src/utils/ghl.ts` hace POST a un webhook de GoHighLevel hardcodeado. **Traga los errores a propósito** — un fallo de tracking nunca debe romper la UX. Si necesitas saber si un lead llegó, míralo en GHL, no en la consola.
+`trackStage(etapa, data)` en `src/utils/ghl.ts` postea a `/api/lead`, **no a GHL**. Un lead que falla
+**sí lanza** para que el usuario vea el error; las etapas de simple visita se tragan los fallos,
+porque el tracking nunca debe romper la UX.
 
 `ReconstruccionView` emite dos etapas: `reconstruccion_view` al montar y `reconstruccion_lead` al enviar el formulario.
 
