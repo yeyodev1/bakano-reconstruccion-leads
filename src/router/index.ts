@@ -36,11 +36,11 @@ const router = createRouter({
         title: 'Nos robaron | Bakano \u2014 Web $400 \u00b7 Tienda con PayPhone $500',
         description:
           'Entraron a nuestra oficina y se llevaron los equipos. Para reconstruir abrimos 30 cupos: trabajos que valen de $2,000 a $4,000 a $400 la web y $500 la tienda con pasarela PayPhone.',
-        canonical: 'https://bakano.ec/',
+        canonical: 'https://web.bakano.ec/',
         ogTitle: 'Nos robaron. Y en vez de cerrar, te hacemos tu p\u00e1gina web.',
         ogDescription:
           '30 cupos: web $400 y tienda con PayPhone $500. Trabajos que normalmente valen entre $2,000 y $4,000.',
-        ogUrl: 'https://bakano.ec/',
+        ogUrl: 'https://web.bakano.ec/',
       } satisfies RouteMeta,
     },
     {
@@ -123,10 +123,10 @@ const router = createRouter({
         title: 'Política de Privacidad | Bakano Ecuador',
         description:
           'Política de privacidad de Bakano. Información sobre el tratamiento de datos personales conforme a la Ley Orgánica de Protección de Datos Personales del Ecuador.',
-        canonical: 'https://bakano.ec/politicas-privacidad',
+        canonical: 'https://web.bakano.ec/politicas-privacidad',
         ogTitle: 'Política de Privacidad | Bakano Ecuador',
         ogDescription: 'Política de privacidad de Bakano Ecuador.',
-        ogUrl: 'https://bakano.ec/politicas-privacidad',
+        ogUrl: 'https://web.bakano.ec/politicas-privacidad',
       } satisfies RouteMeta,
     },
     {
@@ -137,10 +137,10 @@ const router = createRouter({
         title: 'Aviso Legal | Bakano Ecuador',
         description:
           'Aviso legal de Bakano Ecuador. Términos y condiciones de uso del sitio web bakano.ec.',
-        canonical: 'https://bakano.ec/aviso-legal',
+        canonical: 'https://web.bakano.ec/aviso-legal',
         ogTitle: 'Aviso Legal | Bakano Ecuador',
         ogDescription: 'Aviso legal de Bakano Ecuador.',
-        ogUrl: 'https://bakano.ec/aviso-legal',
+        ogUrl: 'https://web.bakano.ec/aviso-legal',
       } satisfies RouteMeta,
     },
     {

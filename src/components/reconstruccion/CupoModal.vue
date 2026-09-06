@@ -38,23 +38,25 @@ onUnmounted(() => {
             <i class="fa-solid fa-xmark"></i>
           </button>
 
-          <CupoForm v-if="!enviado" :key="String(abierto)" :plan="plan" @enviado="onEnviado" />
+          <div class="cm__scroll">
+            <CupoForm v-if="!enviado" :key="String(abierto)" :plan="plan" @enviado="onEnviado" />
 
-          <div v-else class="cm__ok">
-            <i class="fa-solid fa-circle-check"></i>
-            <h2>Listo, {{ nombre }}</h2>
+            <div v-else class="cm__ok">
+              <i class="fa-solid fa-circle-check"></i>
+              <h2>Listo, {{ nombre }}</h2>
 
-            <template v-if="interes === 'ayudar'">
-              <p>Gracias por el interés. El chisme completo está en el reel.</p>
-              <a class="cm__cta" :href="REEL_CHISME" target="_blank" rel="noopener">
-                <i class="fa-brands fa-instagram"></i> Verlo y darnos like
-              </a>
-            </template>
+              <template v-if="interes === 'ayudar'">
+                <p>Gracias por el interés. El chisme completo está en el reel.</p>
+                <a class="cm__cta" :href="REEL_CHISME" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-instagram"></i> Verlo y darnos like
+                </a>
+              </template>
 
-            <template v-else>
-              <p>Tu cupo quedó apartado. Te escribimos por WhatsApp hoy mismo.</p>
-              <p class="cm__nota">Gracias por ayudarnos a reconstruir.</p>
-            </template>
+              <template v-else>
+                <p>Tu cupo quedó apartado. Te escribimos por WhatsApp hoy mismo.</p>
+                <p class="cm__nota">Gracias por ayudarnos a reconstruir.</p>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -72,22 +74,38 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  overflow-y: auto;
+  // El scroll vive dentro de la caja, no aquí: una caja más alta que el overlay
+  // con align-items distinto de flex-start deja su parte superior fuera de alcance.
+  overflow: hidden;
   background: rgba(#000, 0.72);
   backdrop-filter: blur(4px);
 
   &__box {
+    // Padding compartido: el pie pegajoso del formulario lo lee para sangrar igual.
+    --cm-pad: 1.5rem;
+
     position: relative;
     display: flex;
     width: 100%;
     max-width: 460px;
+    max-height: 100vh;
+    max-height: 100dvh; // dvh descuenta la barra del navegador móvil
     flex-direction: column;
-    padding: 2rem 1.5rem 2.25rem;
+    overflow: hidden;
     border: 1px solid rgba(#fff, 0.12);
     border-radius: 20px 20px 0 0;
     background: $BAKANO-DARK;
     color: $BAKANO-LIGHT;
     font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem var(--cm-pad) 0;
+    // Que el scroll no se propague a la página de atrás al llegar al tope.
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   &__x {
@@ -114,7 +132,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem 0 0;
+    padding: 1rem 0 max(2.25rem, env(safe-area-inset-bottom));
     text-align: center;
 
     > i {
@@ -147,6 +165,7 @@ onUnmounted(() => {
     align-items: center;
     padding: 1.5rem;
     &__box {
+      max-height: calc(100dvh - 3rem);
       border-radius: 20px;
     }
   }

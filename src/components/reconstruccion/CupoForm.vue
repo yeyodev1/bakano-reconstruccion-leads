@@ -98,13 +98,15 @@ async function enviar() {
       </label>
     </div>
 
-    <button class="cf__cta" :disabled="!valido || enviando" @click="enviar">
-      <i v-if="enviando" class="fa-solid fa-spinner fa-spin"></i>
-      {{ enviando ? 'Enviando…' : soloChisme ? 'Enviar' : 'Reservar mi cupo' }}
-    </button>
+    <div class="cf__pie">
+      <button class="cf__cta" :disabled="!valido || enviando" @click="enviar">
+        <i v-if="enviando" class="fa-solid fa-spinner fa-spin"></i>
+        {{ enviando ? 'Enviando…' : soloChisme ? 'Enviar' : 'Reservar mi cupo' }}
+      </button>
 
-    <p v-if="error" class="cf__error">{{ error }}</p>
-    <p class="cf__legal">Al enviar aceptas que te contactemos. Nada de spam.</p>
+      <p v-if="error" class="cf__error">{{ error }}</p>
+      <p class="cf__legal">Al enviar aceptas que te contactemos. Nada de spam.</p>
+    </div>
   </div>
 </template>
 
@@ -201,6 +203,28 @@ async function enviar() {
     }
   }
 
+  // El formulario es largo: en pantallas bajas el botón quedaba fuera de vista y
+  // parecía que no había forma de enviar. Pegado abajo, siempre está a la mano.
+  &__pie {
+    position: sticky;
+    bottom: 0;
+    margin: 0 calc(var(--cm-pad, 1.5rem) * -1);
+    padding: 0.9rem var(--cm-pad, 1.5rem) max(1rem, env(safe-area-inset-bottom));
+    background: $BAKANO-DARK;
+
+    // Difumina el contenido que pasa por detrás en vez de cortarlo en seco.
+    &::before {
+      position: absolute;
+      top: -1.6rem;
+      right: 0;
+      left: 0;
+      height: 1.6rem;
+      background: linear-gradient(to bottom, rgba($BAKANO-DARK, 0), $BAKANO-DARK);
+      content: '';
+      pointer-events: none;
+    }
+  }
+
   &__cta {
     width: 100%;
     @include r.cta;
@@ -214,10 +238,43 @@ async function enviar() {
   }
 
   &__legal {
-    margin-top: 0.9rem;
+    margin: 0.7rem 0 0;
     color: rgba($BAKANO-LIGHT, 0.42);
     font-size: 0.76rem;
     text-align: center;
+  }
+
+  // Portátiles bajos y móviles pequeños: mismo formulario, menos aire.
+  @media (max-height: 760px) {
+    h2 {
+      font-size: 1.3rem;
+    }
+
+    &__sub {
+      margin-top: 0.3rem;
+    }
+
+    &__fila label,
+    &__campo {
+      margin-top: 0.8rem;
+    }
+
+    &__pregunta {
+      margin: 1.1rem 0 0.55rem;
+    }
+
+    &__opciones {
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+
+      label {
+        padding: 0.72rem 0.9rem;
+      }
+    }
+
+    &__legal {
+      margin-top: 0.5rem;
+    }
   }
 }
 </style>

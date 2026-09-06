@@ -77,7 +77,7 @@ async function enviarACapi(
     event_time: Math.floor(Date.now() / 1000),
     event_id: eventId, // mismo id que dispara el pixel del navegador → Meta deduplica
     action_source: 'website',
-    event_source_url: body.origen_url || 'https://bakano-reconstruccion-leads.vercel.app/',
+    event_source_url: body.origen_url || 'https://web.bakano.ec/',
     user_data,
     custom_data: {
       currency: 'USD',
