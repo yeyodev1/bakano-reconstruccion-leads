@@ -102,7 +102,9 @@ onUnmounted(() => {
   &__scroll {
     flex: 1;
     overflow-y: auto;
-    padding: 2rem var(--cm-pad) 0;
+    // Sin sangria arriba: el encabezado pegajoso del formulario aporta la suya
+    // y asi puede taparse el contenido que le pasa por detras.
+    padding: 0 var(--cm-pad);
     // Que el scroll no se propague a la página de atrás al llegar al tope.
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
@@ -132,7 +134,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem 0 max(2.25rem, env(safe-area-inset-bottom));
+    padding: 3rem 0 max(2.25rem, env(safe-area-inset-bottom));
     text-align: center;
 
     > i {

@@ -71,8 +71,10 @@ async function enviar() {
 
 <template>
   <div class="cf">
-    <h2>Asegura tu cupo</h2>
-    <p class="cf__sub">Te escribimos por WhatsApp hoy mismo.</p>
+    <div class="cf__enc">
+      <h2>Asegura tu cupo</h2>
+      <p class="cf__sub">Te escribimos por WhatsApp hoy mismo.</p>
+    </div>
 
     <div class="cf__fila">
       <label>Tu nombre <input v-model="form.nombre" type="text" placeholder="María" /></label>
@@ -116,6 +118,32 @@ async function enviar() {
 .cf {
   display: flex;
   flex-direction: column;
+
+  // El encabezado se queda pegado arriba: al bajar dentro del modal, el titulo y
+  // el subtitulo se iban de largo y la caja quedaba sin contexto, con la X
+  // flotando sobre un campo cualquiera.
+  &__enc {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    // Sangra el ancho completo de la caja para tapar lo que pasa por detras.
+    margin: 0 calc(var(--cm-pad, 1.5rem) * -1);
+    // A la derecha, sitio para la X (36px + su separacion).
+    padding: 2rem calc(var(--cm-pad, 1.5rem) + 2.4rem) 0.7rem var(--cm-pad, 1.5rem);
+    background: $BAKANO-DARK;
+
+    // Mismo difuminado que el pie, en espejo.
+    &::after {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      height: 1.4rem;
+      background: linear-gradient(to bottom, $BAKANO-DARK, rgba($BAKANO-DARK, 0));
+      content: '';
+      pointer-events: none;
+    }
+  }
 
   h2 {
     margin: 0;
@@ -246,6 +274,11 @@ async function enviar() {
 
   // Portátiles bajos y móviles pequeños: mismo formulario, menos aire.
   @media (max-height: 760px) {
+    &__enc {
+      padding-top: 1.4rem;
+      padding-bottom: 0.55rem;
+    }
+
     h2 {
       font-size: 1.3rem;
     }
