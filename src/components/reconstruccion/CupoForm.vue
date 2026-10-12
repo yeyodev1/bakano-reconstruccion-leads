@@ -1,43 +1,113 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import PhoneField from './PhoneField.vue'
-import { trackStage, generateEventId } from '@/utils/ghl'
+import { trackStage, generateEventId, guardarParcial } from '@/utils/ghl'
 import { getStoredFbParams } from '@/utils/fbclid'
-import { etiquetaPlan, valorPlan } from '@/data/reconstruccion'
+import { etiquetaPlan, valorPlan, planes, INVERSION_MINIMA } from '@/data/reconstruccion'
 
 const props = defineProps<{ plan?: string }>()
 const emit = defineEmits<{ (e: 'enviado', nombre: string, interes: string): void }>()
 
+/**
+ * Formulario corto a propósito: primero un toque (qué necesita), después tres datos.
+ * Nombre y apellido van en un solo campo; el negocio ya no se pide (era opcional y
+ * alargaba el modal). GHL y CAPI siguen recibiendo `nombre` y `apellido` por separado.
+ */
 const form = ref({
-  nombre: '',
-  apellido: '',
+  nombreCompleto: '',
   telefono: '',
   email: '',
-  negocio: '',
   interes: props.plan ?? '',
+  inversion: false,
 })
 const enviando = ref(false)
+const enviado = ref(false)
 const error = ref('')
+/** Se activa al primer intento de enviar: desde ahí se marca lo que falta. */
+const intentado = ref(false)
 
 const soloChisme = computed(() => form.value.interes === 'ayudar')
 
 // Suficiente para atajar typos evidentes; la validación real la hace GHL al deduplicar.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-const valido = computed(
-  () =>
-    form.value.nombre.trim().length > 1 &&
-    form.value.apellido.trim().length > 1 &&
-    form.value.telefono !== '' &&
-    EMAIL_RE.test(form.value.email.trim()) &&
-    form.value.interes !== '',
-)
+/** "María José Pérez" → nombre "María", apellido "José Pérez". */
+const partes = computed(() => {
+  const [nombre = '', ...resto] = form.value.nombreCompleto.trim().split(/\s+/)
+  return { nombre, apellido: resto.join(' ') }
+})
+
+const faltaNombre = computed(() => form.value.nombreCompleto.trim().length < 2)
+const faltaTelefono = computed(() => form.value.telefono === '')
+const faltaEmail = computed(() => !EMAIL_RE.test(form.value.email.trim()))
+const faltaInversion = computed(() => !soloChisme.value && !form.value.inversion)
+
+/** Lo primero que falta, en el orden del formulario. Vacío si está todo. */
+const faltante = computed(() => {
+  if (!form.value.interes) return 'Elige si quieres web o tienda'
+  if (faltaNombre.value) return 'Escribe tu nombre'
+  if (faltaTelefono.value) return 'Escribe un WhatsApp válido'
+  if (faltaEmail.value) return 'Escribe un correo válido'
+  if (faltaInversion.value) return 'Confirma que tienes la inversión mínima'
+  return ''
+})
+
+const precio = (id: string) => `$${planes.find((p) => p.id === id)?.precio ?? ''}`
 
 const opciones = [
-  { id: 'web', icono: 'fa-globe', texto: 'Página Web Pro', precio: '$400' },
-  { id: 'tienda', icono: 'fa-cart-shopping', texto: 'Tienda Online + PayPhone', precio: '$500' },
-  { id: 'ayudar', icono: 'fa-heart', texto: 'Solo quiero ayudar o saber el chisme', precio: '' },
+  { id: 'web', icono: 'fa-globe', texto: 'Página web', precio: precio('web') },
+  { id: 'tienda', icono: 'fa-cart-shopping', texto: 'Tienda online', precio: precio('tienda') },
 ]
+
+const datos = () => ({
+  nombre: partes.value.nombre,
+  apellido: partes.value.apellido,
+  telefono: form.value.telefono,
+  email: form.value.email.trim().toLowerCase(),
+  negocio: '',
+  interes: form.value.interes,
+  plan_nombre: etiquetaPlan(form.value.interes),
+  valor: valorPlan(form.value.interes),
+  inversion_confirmada: form.value.inversion ? 'si' : 'no',
+  origen: 'landing-reconstruccion',
+  ...getStoredFbParams(),
+})
+
+/** Firma de lo último que se guardó como parcial, para no mandar dos veces lo mismo. */
+let ultimoParcial = ''
+
+/**
+ * Si el usuario dejó al menos un teléfono o un correo y no envió, lo guardamos igual para
+ * recuperarlo por WhatsApp. Se llama al cerrar el modal y al salir de la página.
+ */
+function guardarSiHayDatos() {
+  if (enviado.value) return
+  const d = datos()
+  if (!d.telefono && !EMAIL_RE.test(d.email)) return
+  const firma = JSON.stringify(d)
+  if (firma === ultimoParcial) return
+  ultimoParcial = firma
+  guardarParcial(d)
+}
+
+const alOcultar = () => {
+  if (document.visibilityState === 'hidden') guardarSiHayDatos()
+}
+
+onMounted(() => {
+  window.addEventListener('pagehide', guardarSiHayDatos)
+  document.addEventListener('visibilitychange', alOcultar)
+})
+
+onBeforeUnmount(() => {
+  guardarSiHayDatos()
+  window.removeEventListener('pagehide', guardarSiHayDatos)
+  document.removeEventListener('visibilitychange', alOcultar)
+})
+
+const tieneDatos = computed(() => form.value.telefono !== '' || form.value.email.trim() !== '')
+
+defineExpose({ guardarSiHayDatos, tieneDatos })
 
 watch(
   () => props.plan,
@@ -47,32 +117,26 @@ watch(
 )
 
 async function enviar() {
-  if (!valido.value || enviando.value) return
+  if (enviando.value) return
+  // El botón nunca está gris: si falta algo, se dice qué en vez de dejar al usuario adivinando.
+  if (faltante.value) {
+    intentado.value = true
+    return
+  }
   enviando.value = true
   error.value = ''
   const event_id = generateEventId('lead')
   const plan = form.value.interes
   try {
-    await trackStage('reconstruccion_lead', {
-      event_id,
-      nombre: form.value.nombre.trim(),
-      apellido: form.value.apellido.trim(),
-      telefono: form.value.telefono,
-      email: form.value.email.trim().toLowerCase(),
-      negocio: form.value.negocio.trim(),
-      interes: plan,
-      plan_nombre: etiquetaPlan(plan),
-      valor: valorPlan(plan),
-      origen: 'landing-reconstruccion',
-      ...getStoredFbParams(),
-    })
+    await trackStage('reconstruccion_lead', { event_id, ...datos() })
+    enviado.value = true
     ;(window as any).fbq?.(
       'track',
       soloChisme.value ? 'Contact' : 'Lead',
       {},
       { eventID: event_id },
     )
-    emit('enviado', form.value.nombre.trim(), plan)
+    emit('enviado', partes.value.nombre, plan)
   } catch {
     error.value = 'No se pudo enviar. Escríbenos por WhatsApp y te atendemos igual.'
   } finally {
@@ -84,19 +148,37 @@ async function enviar() {
 <template>
   <div class="cf">
     <div class="cf__enc">
-      <h2>Asegura tu cupo</h2>
-      <p class="cf__sub">Te escribimos por WhatsApp hoy mismo.</p>
+      <h2>Aparta tu cupo</h2>
+      <p class="cf__sub">Toma menos de un minuto. Te escribimos por WhatsApp hoy mismo.</p>
     </div>
 
-    <div class="cf__fila">
-      <label>Tu nombre <input v-model="form.nombre" type="text" placeholder="María" /></label>
-      <label>Tu apellido <input v-model="form.apellido" type="text" placeholder="Pérez" /></label>
+    <p class="cf__paso"><b>1</b> ¿Qué necesitas?</p>
+    <div class="cf__opciones" :class="{ 'is-falta': intentado && !form.interes }">
+      <label v-for="o in opciones" :key="o.id" :class="{ 'is-on': form.interes === o.id }">
+        <input v-model="form.interes" type="radio" :value="o.id" />
+        <i class="fa-solid" :class="o.icono"></i>
+        <span>{{ o.texto }}</span>
+        <strong>{{ o.precio }}</strong>
+      </label>
     </div>
+
+
+    <p class="cf__paso"><b>2</b> ¿A dónde te escribimos?</p>
+
+    <label class="cf__campo" :class="{ 'is-falta': intentado && faltaNombre }">
+      Nombre y apellido
+      <input
+        v-model="form.nombreCompleto"
+        type="text"
+        autocomplete="name"
+        placeholder="María Pérez"
+      />
+    </label>
 
     <PhoneField v-model="form.telefono" />
 
-    <label class="cf__campo">
-      Tu correo
+    <label class="cf__campo" :class="{ 'is-falta': intentado && faltaEmail }">
+      Correo
       <input
         v-model="form.email"
         type="email"
@@ -108,131 +190,117 @@ async function enviar() {
       />
     </label>
 
-    <label class="cf__campo">
-      Tu negocio <span>(opcional)</span>
-      <input v-model="form.negocio" type="text" placeholder="Ej. Panadería La Espiga" />
-    </label>
-
-    <p class="cf__pregunta">¿Qué te interesa?</p>
-    <div class="cf__opciones">
-      <label v-for="o in opciones" :key="o.id" :class="{ 'is-on': form.interes === o.id }">
-        <input v-model="form.interes" type="radio" :value="o.id" />
-        <i class="fa-solid" :class="o.icono"></i>
+    <Transition name="despliegue">
+      <label
+        v-if="form.interes && !soloChisme"
+        class="cf__inversion"
+        :class="{ 'is-on': form.inversion, 'is-falta': intentado && faltaInversion }"
+      >
+        <input v-model="form.inversion" type="checkbox" />
+        <i class="fa-solid" :class="form.inversion ? 'fa-square-check' : 'fa-square'"></i>
         <span>
-          {{ o.texto }}
-          <strong v-if="o.precio">{{ o.precio }}</strong>
+          Tengo <strong>al menos ${{ INVERSION_MINIMA }}</strong> para invertir y quiero arrancar
+          este mes.
         </span>
       </label>
-    </div>
+    </Transition>
 
     <div class="cf__pie">
-      <button class="cf__cta" :disabled="!valido || enviando" @click="enviar">
+      <Transition name="texto">
+        <p v-if="intentado && faltante" class="cf__falta">
+          <i class="fa-solid fa-circle-exclamation"></i> {{ faltante }}
+        </p>
+      </Transition>
+
+      <button class="cf__cta" :disabled="enviando" @click="enviar">
         <i v-if="enviando" class="fa-solid fa-spinner fa-spin"></i>
-        {{ enviando ? 'Enviando…' : soloChisme ? 'Enviar' : 'Reservar mi cupo' }}
+        {{ enviando ? 'Enviando…' : 'Reservar mi cupo' }}
+        <i v-if="!enviando" class="fa-solid fa-arrow-right"></i>
       </button>
 
       <p v-if="error" class="cf__error">{{ error }}</p>
-      <p class="cf__legal">Al enviar aceptas que te contactemos. Nada de spam.</p>
     </div>
+
+    <p class="cf__legal">Al escribir tus datos aceptas que te contactemos. Nada de spam.</p>
+    <button class="cf__ayudar" :class="{ 'is-on': soloChisme }" @click="form.interes = 'ayudar'">
+      <i v-if="soloChisme" class="fa-solid fa-check"></i> Solo quiero ayudar o saber el chisme
+    </button>
   </div>
 </template>
 
 <style scoped lang="scss">
 @use '@/styles/reconstruccion.scss' as r;
 
+$ROJO: #ff8095;
+
 .cf {
   display: flex;
   flex-direction: column;
 
-  // El encabezado se queda pegado arriba: al bajar dentro del modal, el titulo y
-  // el subtitulo se iban de largo y la caja quedaba sin contexto, con la X
-  // flotando sobre un campo cualquiera.
+  // Encabezado pegado arriba: al bajar dentro del modal no se pierde el contexto.
   &__enc {
     position: sticky;
     top: 0;
     z-index: 1;
-    // Sangra el ancho completo de la caja para tapar lo que pasa por detras.
     margin: 0 calc(var(--cm-pad, 1.5rem) * -1);
-    // A la derecha, sitio para la X (36px + su separacion).
-    padding: 2rem calc(var(--cm-pad, 1.5rem) + 2.4rem) 0.7rem var(--cm-pad, 1.5rem);
+    // A la derecha, sitio para la X (36px + su separación).
+    padding: 1.6rem calc(var(--cm-pad, 1.5rem) + 2.4rem) 0.9rem var(--cm-pad, 1.5rem);
+    border-bottom: 1px solid rgba(#fff, 0.08);
     background: $BAKANO-DARK;
-
-    // Mismo difuminado que el pie, en espejo.
-    &::after {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      left: 0;
-      height: 1.4rem;
-      background: linear-gradient(to bottom, $BAKANO-DARK, rgba($BAKANO-DARK, 0));
-      content: '';
-      pointer-events: none;
-    }
   }
 
   h2 {
     margin: 0;
     font-family: 'Outfit', sans-serif;
-    font-size: 1.55rem;
+    font-size: 1.45rem;
   }
 
   &__sub {
-    margin: 0.45rem 0 0;
-    color: rgba($BAKANO-LIGHT, 0.62);
-    font-size: 0.92rem;
+    margin: 0.3rem 0 0;
+    color: rgba($BAKANO-LIGHT, 0.6);
+    font-size: 0.88rem;
   }
 
-  &__fila {
+  &__paso {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    label {
-      flex: 1 1 140px;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 1.3rem 0 0.65rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    b {
+      display: flex;
+      width: 22px;
+      height: 22px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: $BAKANO-PINK;
+      color: #fff;
+      font-size: 0.75rem;
     }
   }
 
-  &__fila label,
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    margin-top: 1.05rem;
-    font-size: 0.86rem;
-    font-weight: 600;
-    span {
-      color: rgba($BAKANO-LIGHT, 0.45);
-      font-weight: 400;
-    }
-    input {
-      min-width: 0;
-      @include r.campo;
-    }
-  }
-
-  &__pregunta {
-    margin: 1.6rem 0 0.7rem;
-    font-size: 0.86rem;
-    font-weight: 600;
-  }
-
+  // Dos opciones lado a lado: un toque y listo.
   &__opciones {
     display: flex;
-    flex-direction: column;
     gap: 0.6rem;
-    margin-bottom: 1.6rem;
 
     label {
       display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.95rem 1rem;
+      flex: 1;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      padding: 0.85rem 0.9rem;
       border: 1px solid rgba(#fff, 0.14);
       border-radius: 12px;
       background: rgba(#fff, 0.04);
       cursor: pointer;
       transition:
-        border-color 0.16s ease,
-        background 0.16s ease;
+        border-color 0.15s ease,
+        background 0.15s ease;
 
       &.is-on {
         border-color: $BAKANO-PINK;
@@ -244,38 +312,100 @@ async function enviar() {
         pointer-events: none;
       }
       i {
+        margin-bottom: 0.25rem;
         color: $BAKANO-PINK;
-        font-size: 1.02rem;
       }
       span {
-        font-size: 0.92rem;
+        font-size: 0.9rem;
+        font-weight: 600;
       }
       strong {
         color: $BAKANO-PINK;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.35rem;
       }
+    }
+
+    &.is-falta label {
+      border-color: $ROJO;
     }
   }
 
-  // El formulario es largo: en pantallas bajas el botón quedaba fuera de vista y
-  // parecía que no había forma de enviar. Pegado abajo, siempre está a la mano.
+  // Va al final, justo antes del botón: es lo último que confirma antes de reservar.
+  &__inversion {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-top: 1.1rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba($BAKANO-PINK, 0.5);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    &.is-on {
+      border-color: $BAKANO-GREEN;
+      background: rgba($BAKANO-GREEN, 0.08);
+      i {
+        color: $BAKANO-GREEN;
+      }
+    }
+    &.is-falta {
+      border-color: $ROJO;
+    }
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    i {
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      color: $BAKANO-PINK;
+      font-size: 1.15rem;
+    }
+    strong {
+      color: $BAKANO-PINK;
+    }
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+
+    input {
+      min-width: 0;
+      @include r.campo;
+    }
+    &.is-falta input {
+      border-color: $ROJO;
+    }
+  }
+
+  // El botón siempre visible abajo, aunque el formulario no quepa.
   &__pie {
     position: sticky;
     bottom: 0;
-    margin: 0 calc(var(--cm-pad, 1.5rem) * -1);
-    padding: 0.9rem var(--cm-pad, 1.5rem) max(1rem, env(safe-area-inset-bottom));
+    margin: 1.3rem calc(var(--cm-pad, 1.5rem) * -1) 0;
+    padding: 0.9rem var(--cm-pad, 1.5rem);
+    border-top: 1px solid rgba(#fff, 0.08);
     background: $BAKANO-DARK;
+  }
 
-    // Difumina el contenido que pasa por detrás en vez de cortarlo en seco.
-    &::before {
-      position: absolute;
-      top: -1.6rem;
-      right: 0;
-      left: 0;
-      height: 1.6rem;
-      background: linear-gradient(to bottom, rgba($BAKANO-DARK, 0), $BAKANO-DARK);
-      content: '';
-      pointer-events: none;
-    }
+  &__falta {
+    margin: 0 0 0.7rem;
+    color: $ROJO;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: center;
   }
 
   &__cta {
@@ -284,55 +414,60 @@ async function enviar() {
   }
 
   &__error {
-    margin-top: 0.85rem;
-    color: #ff8095;
+    margin: 0.7rem 0 0;
+    color: $ROJO;
     font-size: 0.86rem;
     text-align: center;
   }
 
   &__legal {
-    margin: 0.7rem 0 0;
+    margin: 0.2rem 0 0;
     color: rgba($BAKANO-LIGHT, 0.42);
     font-size: 0.76rem;
     text-align: center;
   }
 
-  // Portátiles bajos y móviles pequeños: mismo formulario, menos aire.
-  @media (max-height: 760px) {
-    &__enc {
-      padding-top: 1.4rem;
-      padding-bottom: 0.55rem;
-    }
+  &__ayudar {
+    display: block;
+    margin: 0.3rem auto max(1rem, env(safe-area-inset-bottom));
+    padding: 0.3rem;
+    border: 0;
+    background: none;
+    color: rgba($BAKANO-LIGHT, 0.45);
+    font-family: inherit;
+    font-size: 0.78rem;
+    text-decoration: underline;
+    cursor: pointer;
 
-    h2 {
-      font-size: 1.3rem;
+    &.is-on {
+      color: $BAKANO-PINK;
+      text-decoration: none;
     }
+  }
+}
 
-    &__sub {
-      margin-top: 0.3rem;
-    }
+// Checkbox de inversión: aparece con un fundido corto.
+.despliegue-enter-active,
+.despliegue-leave-active,
+.texto-enter-active,
+.texto-leave-active {
+  transition: opacity 0.15s ease;
+}
+.despliegue-enter-from,
+.despliegue-leave-to,
+.texto-enter-from,
+.texto-leave-to {
+  opacity: 0;
+}
 
-    &__fila label,
-    &__campo {
-      margin-top: 0.8rem;
-    }
-
-    &__pregunta {
-      margin: 1.1rem 0 0.55rem;
-    }
-
-    &__opciones {
-      gap: 0.45rem;
-      margin-bottom: 1rem;
-
-      label {
-        padding: 0.72rem 0.9rem;
-      }
-    }
-
-    &__legal {
-      margin-top: 0.5rem;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .despliegue-enter-active,
+  .despliegue-leave-active,
+  .texto-enter-active,
+  .texto-leave-active,
+  .cf__opciones label,
+  .cf__inversion {
+    transition: none;
   }
 }
 </style>

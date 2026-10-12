@@ -56,3 +56,27 @@ export async function trackStage(
     return { ok: false }
   }
 }
+
+/**
+ * Guarda lo que el usuario alcanzó a escribir aunque no envíe el formulario.
+ *
+ * Se llama al cerrar el modal o al irse de la página, así que usa `keepalive`: el navegador
+ * termina la petición aunque la pestaña ya se esté cerrando. Nunca lanza.
+ */
+export function guardarParcial(data: Record<string, string>): void {
+  try {
+    fetch(ENDPOINT, {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        etapa: 'reconstruccion_parcial',
+        event_id: generateEventId('parcial'),
+        origen_url: window.location.href,
+        ...data,
+      }),
+    }).catch(() => {})
+  } catch {
+    // El tracking nunca rompe la UX.
+  }
+}

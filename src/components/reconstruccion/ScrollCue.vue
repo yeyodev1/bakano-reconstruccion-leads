@@ -57,7 +57,6 @@ const bajar = () =>
     background: rgba($BAKANO-PINK, 0.08);
     color: $BAKANO-PINK;
     font-size: 0.85rem;
-    animation: cue-bob 2s ease-in-out infinite;
     transition:
       border-color 0.2s ease,
       background 0.2s ease;

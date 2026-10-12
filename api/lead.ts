@@ -53,16 +53,22 @@ const o = (v: string) => v || '—'
  * la acción "Añadir nota" del workflow use una sola variable en vez de armarla campo a campo.
  * Los emojis son deliberados: son la única forma de dar jerarquía en una nota de texto plano.
  */
-function nota(d: Record<string, string>, tags: string[], event_id: string): string {
+function nota(
+  d: Record<string, string>,
+  tags: string[],
+  event_id: string,
+  titulo = '🧾 Lead landing-reconstruccion',
+): string {
   const utm = ['source', 'medium', 'campaign', 'content', 'term', 'id']
     .map((k) => `${k}=${o(d[`utm_${k}`])}`)
     .join(' | ')
   return [
-    `🧾 Lead landing-reconstruccion`,
+    titulo,
     `🎯 Interés: ${INTERES[d.interes] ?? o(d.interes)}`,
     `📦 Plan: ${o(d.plan_nombre)} | 💵 USD ${o(d.valor)}`,
     `✉️ Email: ${o(d.email)}`,
     `🏪 Negocio: ${o(d.negocio)}`,
+    `💰 Confirmó inversión mínima de USD 500: ${d.inversion_confirmada === 'si' ? 'Sí' : 'No'}`,
     `📍 Origen: ${o(d.origen)}`,
     `🔗 URL: ${o(d.origen_url)}`,
     `🆔 Event ID: ${event_id}`,
@@ -150,11 +156,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const datos: Record<string, string> = {}
   for (const k of [
-    'nombre', 'apellido', 'telefono', 'email', 'negocio', 'interes', 'plan_nombre',
-    'valor', 'origen', 'origen_url', 'fbclid', 'fbc', 'fbp',
-    'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_id',
+    'nombre',
+    'apellido',
+    'telefono',
+    'email',
+    'negocio',
+    'interes',
+    'plan_nombre',
+    'valor',
+    'inversion_confirmada',
+    'origen',
+    'origen_url',
+    'fbclid',
+    'fbc',
+    'fbp',
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'utm_id',
   ]) {
     datos[k] = str(b[k])
+  }
+
+  // Abandonó el formulario a medias: se guarda como contacto para recuperarlo por WhatsApp,
+  // pero no es una conversión, así que no va a CAPI.
+  if (etapa === 'reconstruccion_parcial') {
+    if (!datos.telefono && !datos.email) {
+      return res.status(400).json({ ok: false, error: 'Sin telefono ni email' })
+    }
+    const tags = ['landing-reconstruccion', 'lead-parcial', 'recuperar']
+    // El workflow de GHL descarta todo lo que no sea `reconstruccion_lead` antes de crear el
+    // contacto. Entra como lead con `interes: parcial`: crea contacto y nota, y la rama
+    // "¿Qué le interesa?" lo manda a FINAL sin abrir oportunidad. Lo que eligió va en la nota.
+    const ok = await enviarAGhl({
+      ...datos,
+      etapa: 'reconstruccion_lead',
+      event_id,
+      interes: 'parcial',
+      tags: tags.join(','),
+      full_name: `${datos.nombre} ${datos.apellido}`.trim(),
+      notas: nota(
+        datos,
+        tags,
+        event_id,
+        '⚠️ Lead PARCIAL — dejó datos pero no envió el formulario',
+      ),
+    })
+    return res.status(ok ? 200 : 502).json({ ok, etapa, tags })
   }
 
   // Las visitas sólo se registran: no son contactos ni eventos de conversión.
@@ -168,7 +218,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const tags = etiquetas(datos.interes)
-  const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()
+  const ip = String(req.headers['x-forwarded-for'] ?? '')
+    .split(',')[0]
+    .trim()
   const ua = String(req.headers['user-agent'] ?? '')
 
   const [ghlOk, capiOk] = await Promise.all([

@@ -46,13 +46,9 @@
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
 
   &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba($BAKANO-PINK, 0.42);
+    background: #cc1f4f;
   }
 
   &:disabled {
@@ -78,4 +74,39 @@
   &::placeholder {
     color: rgba($BAKANO-LIGHT, 0.32);
   }
+}
+
+// Encabezado de sección: número + etiqueta arriba del título. Ordena la lectura de arriba
+// a abajo y deja claro en qué parte de la página está el usuario.
+@mixin eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  color: $BAKANO-PINK;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+
+  b {
+    display: inline-flex;
+    width: 26px;
+    height: 26px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba($BAKANO-PINK, 0.5);
+    border-radius: 8px;
+    background: rgba($BAKANO-PINK, 0.1);
+    font-size: 0.72rem;
+    letter-spacing: 0;
+  }
+}
+
+// Tarjeta base: plana, solo borde.
+@mixin tarjeta {
+  border: 1px solid rgba(#fff, 0.1);
+  border-radius: 16px;
+  background: rgba(#fff, 0.03);
 }

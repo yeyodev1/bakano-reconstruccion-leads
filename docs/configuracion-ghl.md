@@ -80,8 +80,24 @@ Notas de diseño:
 - El flujo de lead completo ya se había probado de punta a punta antes de esta configuración
   (`{"ok":true,"capi":true}` y contacto creado); la estructura del payload no cambió.
 
+## Leads parciales (desde el 12 oct 2026)
+
+Si alguien escribe teléfono o correo en el formulario y se va sin enviar (cierra el modal, cambia
+de app o cierra la pestaña), el navegador manda `etapa: reconstruccion_parcial` a `/api/lead`.
+El servidor lo reenvía a GHL **como `reconstruccion_lead` con `interes: parcial`**, así que pasa
+el filtro "¿Es lead?", crea el contacto y la nota (titulada "Lead PARCIAL"), y en "¿Qué le
+interesa?" cae en `otro` → FINAL: no abre oportunidad. Lo que había elegido queda en la nota.
+No va a CAPI: no es una conversión.
+
+Para trabajarlos desde el CRM falta una rama `interes == parcial` en el workflow que ponga las
+etiquetas `landing-reconstruccion, lead-parcial, recuperar` (hoy solo quedan en la nota).
+
 ## Pendientes
 
+00. **Precios nuevos en las ramas del workflow.** Desde el 12 oct 2026 la web cuesta $500 y la
+   tienda $600. Las oportunidades siguen con valor fijo 400 / 500 y las etiquetas se llaman
+   `interes-web-400` / `interes-tienda-500`. Hay que subir los valores a 500 / 600. Si se
+   renombran las etiquetas, cambiarlas también en `etiquetas()` de `api/lead.ts`.
 0. **Mapear `email` → Email en "Crear contacto".** El formulario ya lo pide (obligatorio) y el
    servidor lo manda en minúsculas; también va hasheado a CAPI como `em`. Hasta que se mapee,
    solo queda en la nota.

@@ -15,8 +15,8 @@ transcrito con whisper.cpp y guardado íntegro en `docs/transcripciones-reels.md
 | Dato | Valor |
 |---|---|
 | Cupos | 30, solo ese mes |
-| Página Web Pro | $400 — SEO + **GEO** (posicionamiento en ChatGPT/Gemini, no solo Google) |
-| Tienda Online | $500 — con pasarela **PayPhone** |
+| Página Web Pro | $500 (era $400 en los reels; subió el 12 oct 2026) — SEO + **GEO** (posicionamiento en ChatGPT/Gemini, no solo Google) |
+| Tienda Online | $600 (era $500) — con pasarela **PayPhone** |
 | Precio normal | "$2,000 a $4,000" |
 
 ### Decisión editorial que hay que respetar

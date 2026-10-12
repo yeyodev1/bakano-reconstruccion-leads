@@ -5,6 +5,8 @@ import andersson from '@/assets/portfolio/andersson.png'
 import sorbito from '@/assets/portfolio/sorbito.png'
 import teque from '@/assets/portfolio/teque.png'
 import boloncity from '@/assets/portfolio/boloncity.png'
+import dogtown from '@/assets/portfolio/dogtown.png'
+import nicole from '@/assets/portfolio/nicole.png'
 
 export type PlanId = 'web' | 'tienda' | 'ayudar'
 
@@ -22,10 +24,56 @@ export const REEL_CHISME = 'https://www.instagram.com/reel/DcwigJrTN8t/'
 export const reels = [
   { code: 'DcwigJrTN8t', pie: 'Llegamos a la oficina y esto encontramos' },
   { code: 'DcwjngQtS3d', pie: 'La historia completa de cómo casi cerramos' },
-  { code: 'DczGaijPjfq', pie: 'Los 30 cupos: web $400, tienda $500' },
+  { code: 'DczGaijPjfq', pie: 'Por qué abrimos los 30 cupos' },
+]
+
+/** Inversión mínima que el lead confirma al enviar: el precio de entrada, la Página Web Pro. */
+export const INVERSION_MINIMA = 500
+
+/**
+ * Clientes que ya se arriesgaron, contados en los reels de @yeyo.dev.
+ * Todo lo que dice cada caso sale del audio del video: no agregar cifras que no estén ahí.
+ */
+export const casos = [
+  {
+    code: 'DeST9nlTGWl',
+    img: dogtown,
+    nombre: 'Dogtown Organics',
+    rubro: 'Comida natural para mascotas',
+    url: 'https://dogtownorganics.com/',
+    stat: '<24h',
+    statLabel: 'de un mensaje de Instagram a facturar',
+    titulo: 'De un mensaje de Instagram a facturar al día siguiente',
+    texto:
+      'La dueña buscaba proveedor de cajas en sus historias. Le escribimos ofreciéndole una tienda en línea, nos dijo que sí y nos dio los accesos esa misma noche. Al día siguiente ya estaba vendiendo.',
+  },
+  {
+    code: 'DeXuA2NzhvI',
+    img: nicole,
+    nombre: 'Nicole Pastry Arts',
+    rubro: 'Pastelería de autor · Guayaquil',
+    url: 'https://nicole.com.ec/',
+    stat: '$2,000',
+    statLabel: 'les cobró otra empresa por su tienda anterior',
+    titulo: 'Les habían cobrado $2,000 por una tienda que no estaba a la altura',
+    texto:
+      'Hoy tienen una tienda completa: el cliente entra, elige su cake, paga, reserva y lo retira o lo recibe en casa. Todo sin escribir por WhatsApp.',
+  },
 ]
 
 export const trabajos = [
+  {
+    img: dogtown,
+    nombre: 'Dogtown Organics',
+    rubro: 'Ecommerce · comida para mascotas',
+    url: 'https://dogtownorganics.com/',
+  },
+  {
+    img: nicole,
+    nombre: 'Nicole Pastry Arts',
+    rubro: 'Ecommerce · pastelería de autor',
+    url: 'https://nicole.com.ec/',
+  },
   {
     img: boloncity,
     nombre: 'Bolón City',
@@ -70,7 +118,7 @@ export const planes: Plan[] = [
     id: 'web',
     icono: 'fa-globe',
     nombre: 'Página Web Pro',
-    precio: 400,
+    precio: 500,
     incluye: [
       'Diseño a medida, mobile first',
       'SEO para Google',
@@ -82,7 +130,7 @@ export const planes: Plan[] = [
     id: 'tienda',
     icono: 'fa-cart-shopping',
     nombre: 'Tienda Online Completa',
-    precio: 500,
+    precio: 600,
     incluye: [
       'Todo lo de la Página Web Pro',
       'Catálogo de productos administrable',
@@ -127,4 +175,4 @@ export const historia = [
 export const etiquetaPlan = (p: string) =>
   p === 'web' ? 'Pagina Web Pro' : p === 'tienda' ? 'Tienda Online + PayPhone' : 'Solo informacion'
 
-export const valorPlan = (p: string) => (p === 'web' ? '400' : p === 'tienda' ? '500' : '0')
+export const valorPlan = (p: string) => (p === 'web' ? '500' : p === 'tienda' ? '600' : '0')

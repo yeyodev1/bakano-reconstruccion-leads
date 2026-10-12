@@ -25,8 +25,8 @@ Los datos de la campaña vienen de los reels de @bakano.ec y no deben inventarse
 | Dato | Valor |
 |---|---|
 | Cupos | 30, solo este mes |
-| Página Web Pro | $400 — SEO para Google + **GEO** (ChatGPT, Gemini y otros LLM) |
-| Tienda Online Completa | $500 — pasarela **PayPhone** integrada |
+| Página Web Pro | $500 (era $400 en los reels; subió el 12 oct 2026) — SEO para Google + **GEO** (ChatGPT, Gemini y otros LLM) |
+| Tienda Online Completa | $600 (era $500) — pasarela **PayPhone** integrada |
 | Precio normal | "$2,000 a $4,000" |
 
 La transcripción real de los tres reels está en `docs/transcripciones-reels.md`; el porqué de cada
